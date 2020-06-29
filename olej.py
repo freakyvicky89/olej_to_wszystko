@@ -112,11 +112,11 @@ class Cock(GameObject):
     def down(self):
         self.vel -= self.dir
 
-    def left(self): # TODO not working [debug]
-        self.dir.rotate(rot_speed)
+    def left(self):
+        self.dir = self.dir.rotate(rot_speed)
 
     def right(self):
-        self.dir.rotate(-rot_speed)
+        self.dir = self.dir.rotate(-rot_speed)
 
 
 class Rock(GameObject):
