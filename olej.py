@@ -27,7 +27,7 @@ bg_color = COLOR['darkcyan']
 piss_color = COLOR['lightgoldenrod1']
 clock = pygame.time.Clock()
 max_tps = 20.0
-rot_speed = 5.0
+rot_speed = 10.0
 delta = 0.0
 CENTER = Vector2(X // 2, Y // 2)
 ROCK_V = Vector2(X // 4, 0)
@@ -130,6 +130,9 @@ class Piss(GameObject):
                             round_vector(self.pos + self.vector * PISS_L + width_vector)
                             ))
 
+    def collision_points(self):
+        return [round_vector(self.pos), round_vector(self.pos + self.vector)]
+
 
 class Cock(GameObject):
     cock = None
@@ -190,13 +193,26 @@ class Rock(GameObject):
         self.hp = size
         self.foto = pygame.transform.scale(
             random.choice(fotos), ((X // 20) * size, (Y // 20) * size))
+        self.got_hit = False
+        self.foto.set_alpha(255)
         Rock.rocks.append(self)
 
-    def force(self, force):
-        self.vel += force
+    def hit(self, force):
+        self.hp -= 1
+        if self.hp > 0:
+            self.vel += force / 4
+            self.foto.set_alpha(128)
+        else:
+            if self.size > 1:
+                pass
+            Rock.rocks.remove(self)
 
     def draw(self):
+        if self.got_hit:
+            self.foto.set_alpha(255)
         screen.blit(self.foto, self.get_rect())
+        if self.foto.get_alpha() < 255:
+            self.got_hit = True
 
     def get_rect(self):
         rect = self.foto.get_rect()
@@ -213,6 +229,16 @@ def rock_collisions():
             while pair[0].get_rect().colliderect(pair[1].get_rect()):
                 pair[0].move()
                 pair[1].move()
+
+
+def piss_collisions():
+    for rock in Rock.rocks:
+        for piss in Piss.bullets:
+            for point in piss.collision_points():
+                if rock.get_rect().collidepoint(point):
+                    Piss.bullets.remove(piss)
+                    rock.hit(piss.vel)
+                    break
 
 
 class GameState(object):
@@ -283,6 +309,7 @@ while True:
         for piss in Piss.bullets:
             piss.move()
 
+        piss_collisions()
         rock_collisions()
         for point in Cock.cock.collision_points():
             for rock in Rock.rocks:
