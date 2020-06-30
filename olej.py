@@ -6,6 +6,7 @@ import os
 from time import sleep
 from abc import ABC
 import random
+from itertools import combinations
 import youtube_dl
 from bs4 import BeautifulSoup as bs
 from urllib import request
@@ -146,6 +147,17 @@ class Rock(GameObject):
         return rect
 
 
+def rock_collisions():
+    for pair in combinations(Rock.rocks, 2):
+        if pair[0].get_rect().colliderect(pair[1].get_rect()):
+            normal = (pair[0].pos - pair[1].pos).normalize()
+            pair[0].vel.reflect_ip(normal)
+            pair[1].vel.reflect_ip(normal)
+            while pair[0].get_rect().colliderect(pair[1].get_rect()):
+                pair[0].move()
+                pair[1].move()
+
+
 class GameState(object):
     game = None
 
@@ -163,8 +175,8 @@ class GameState(object):
         GameState.game = self
 
 
-#GameState(3)
-GameState(1)
+GameState(3)
+#GameState(1)
 #############
 # MAIN LOOP #
 #############
@@ -197,6 +209,8 @@ while True:
         Cock.cock.move()
         for rock in Rock.rocks:
             rock.move()
+
+        rock_collisions()
 
     # DRAWING
     screen.fill(COLOR['darkcyan'])
