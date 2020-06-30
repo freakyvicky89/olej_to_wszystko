@@ -197,6 +197,8 @@ class Rock(GameObject):
         Rock.rocks.append(self)
 
     def hit(self, force):
+        if self not in Rock.rocks:
+            return
         self.hp -= 1
         if self.hp > 0:
             self.vel += force / 4
