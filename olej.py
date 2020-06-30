@@ -24,6 +24,7 @@ pygame.display.set_caption("Olej to wszystko [LOADING]")
 font = pygame.font.Font('freesansbold.ttf', 32)
 fg_color = COLOR['lavender']
 bg_color = COLOR['darkcyan']
+piss_color = COLOR['lightgoldenrod1']
 clock = pygame.time.Clock()
 max_tps = 20.0
 rot_speed = 5.0
@@ -32,6 +33,8 @@ CENTER = Vector2(X // 2, Y // 2)
 ROCK_V = Vector2(X // 4, 0)
 COCK_V = Vector2(0, -1)
 COCK_L = 50
+PISS_SPEED_BOOST = 10
+PISS_L = 5
 
 
 def display_text(text):
@@ -109,6 +112,25 @@ def round_vector(v):
     return int(v.x), int(v.y)
 
 
+class Piss(GameObject):
+    bullets = []
+
+    def __init__(self, pos, vel, vector):
+        self.pos = pos
+        self.vel = vel + (vector * PISS_SPEED_BOOST)
+        self.vector = vector * PISS_L
+        Piss.bullets.append(self)
+
+    def draw(self):
+        width_vector = self.vector.normalize().rotate(90)
+        pygame.draw.polygon(screen, piss_color, (
+                            round_vector(self.pos + width_vector),
+                            round_vector(self.pos + width_vector * -1),
+                            round_vector(self.pos + self.vector * PISS_L + width_vector * -1),
+                            round_vector(self.pos + self.vector * PISS_L + width_vector)
+                            ))
+
+
 class Cock(GameObject):
     cock = None
 
@@ -121,9 +143,6 @@ class Cock(GameObject):
     def up(self):
         self.vel += COCK_V.rotate(self.angle)
 
-    def down(self):
-        self.vel -= COCK_V.rotate(self.angle)
-
     def left(self):
         self.angle -= rot_speed
         if self.angle > 360:
@@ -135,7 +154,7 @@ class Cock(GameObject):
             self.angle += 360
 
     def draw(self):
-        cock_vector = COCK_V.rotate(self.angle)
+        cock_vector = self.get_cock_vector()
         ball_vector = cock_vector.rotate(90)
         pygame.draw.circle(screen, fg_color, round_vector(self.pos + ball_vector * 10), 15)
         pygame.draw.circle(screen, fg_color, round_vector(self.pos + ball_vector * -10), 15)
@@ -148,11 +167,17 @@ class Cock(GameObject):
         pygame.draw.circle(screen, fg_color, round_vector(self.pos + cock_vector * COCK_L), 10)
 
     def collision_points(self):
-        cock_vector = COCK_V.rotate(self.angle)
+        cock_vector = self.get_cock_vector()
         ball_vector = cock_vector.rotate(90)
         return [round_vector(self.pos + ball_vector * 25),
-        round_vector(self.pos + ball_vector * -25),
-        round_vector(self.pos + cock_vector * (COCK_L + 10))]
+                round_vector(self.pos + ball_vector * -25),
+                round_vector(self.pos + cock_vector * (COCK_L + 10))]
+
+    def shoot(self):
+        Piss(self.pos + self.get_cock_vector() * (COCK_L + 10), self.vel, self.get_cock_vector())
+
+    def get_cock_vector(self):
+        return COCK_V.rotate(self.angle)
 
 
 class Rock(GameObject):
@@ -203,6 +228,7 @@ class GameState(object):
 
     def init_level(self, level):
         Rock.rocks.clear()
+        Piss.bullets.clear()
         for i in range(level):
             vector = ROCK_V.rotate(i * (360 // level))
             Rock(CENTER + vector, vector.normalize(), 6)
@@ -231,6 +257,8 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            Cock.cock.shoot()
 
     # TICKING
     tick = clock.tick() / 1000.0
@@ -244,8 +272,6 @@ while True:
             GameState(1)
         if keys[pygame.K_UP]:
             Cock.cock.up()
-        if keys[pygame.K_DOWN]:
-            Cock.cock.down()
         if keys[pygame.K_LEFT]:
             Cock.cock.left()
         if keys[pygame.K_RIGHT]:
@@ -254,6 +280,8 @@ while True:
         Cock.cock.move()
         for rock in Rock.rocks:
             rock.move()
+        for piss in Piss.bullets:
+            piss.move()
 
         rock_collisions()
         for point in Cock.cock.collision_points():
@@ -270,4 +298,6 @@ while True:
     for rock in Rock.rocks:
         rock.draw()
     Cock.cock.draw()
+    for piss in Piss.bullets:
+        piss.draw()
     pygame.display.flip()
