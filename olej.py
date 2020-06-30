@@ -193,26 +193,25 @@ class Rock(GameObject):
         self.hp = size
         self.foto = pygame.transform.scale(
             random.choice(fotos), ((X // 20) * size, (Y // 20) * size))
-        self.got_hit = False
-        self.foto.set_alpha(255)
+        self.got_hit = 0
         Rock.rocks.append(self)
 
     def hit(self, force):
         self.hp -= 1
         if self.hp > 0:
             self.vel += force / 4
-            self.foto.set_alpha(128)
+            self.got_hit = 5
         else:
             if self.size > 1:
                 pass
             Rock.rocks.remove(self)
 
     def draw(self):
-        if self.got_hit:
-            self.foto.set_alpha(255)
-        screen.blit(self.foto, self.get_rect())
-        if self.foto.get_alpha() < 255:
-            self.got_hit = True
+        if self.got_hit == 0:
+            screen.blit(self.foto, self.get_rect())
+        else:
+            pygame.draw.rect(screen, fg_color, self.get_rect())
+            self.got_hit -= 1
 
     def get_rect(self):
         rect = self.foto.get_rect()
