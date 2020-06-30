@@ -3,6 +3,7 @@ from pygame import mixer
 from pygame.math import Vector2
 from pygame.colordict import THECOLORS as COLOR
 import os
+from time import sleep
 from abc import ABC
 import random
 import youtube_dl
@@ -24,13 +25,15 @@ clock = pygame.time.Clock()
 max_tps = 20.0
 rot_speed = 5.0
 delta = 0.0
+CENTER = Vector2(X // 2, Y // 2)
+ROCK_V = Vector2(X // 4, 0)
 
 
 def display_text(text):
     screen.fill((COLOR['darkcyan']))
     loading_images = font.render(text, True, COLOR['lavender'])
     loading_images_rect = loading_images.get_rect()
-    loading_images_rect.center = (X // 2, Y // 2)
+    loading_images_rect.center = CENTER
     screen.blit(loading_images, loading_images_rect)
     pygame.display.flip()
     pygame.event.get()
@@ -66,7 +69,7 @@ if not os.path.exists('./saku.wav'):
 
 mixer.init()
 mixer.music.load('saku.wav')
-mixer.music.set_volume(.8)
+mixer.music.set_volume(.75)
 mixer.music.play()
 
 screen.fill(COLOR['darkcyan'])
@@ -127,23 +130,41 @@ class Rock(GameObject):
         self.vel = vel
         self.size = size
         self.hp = size
-        self.foto = random.choice(fotos)
+        self.foto = pygame.transform.scale(
+            random.choice(fotos), ((X // 20) * size, (Y // 20) * size))
         Rock.rocks.append(self)
 
     def force(self, force):
         self.vel += force
 
+    def draw(self):
+        screen.blit(self.foto, self.get_rect())
+
+    def get_rect(self):
+        rect = self.foto.get_rect()
+        rect.center = self.pos
+        return rect
+
 
 class GameState(object):
     game = None
 
-    def __init__(self):
+    def __init__(self, level):
+        self.level = level
+        display_text("LEVEL %d" % level)
+        sleep(3)
         Rock.rocks.clear()
+
+        for i in range(level):
+            vector = ROCK_V.rotate(i * (360 // level))
+            Rock(CENTER + vector, vector.normalize(), 6)
+
         Cock()
         GameState.game = self
 
 
-GameState()
+#GameState(3)
+GameState(1)
 #############
 # MAIN LOOP #
 #############
@@ -163,7 +184,7 @@ while True:
         delta -= 1 / max_tps
 
         if keys[pygame.K_r]:
-            GameState()
+            GameState(1)
         if keys[pygame.K_UP]:
             Cock.cock.up()
         if keys[pygame.K_DOWN]:
@@ -179,5 +200,7 @@ while True:
 
     # DRAWING
     screen.fill(COLOR['darkcyan'])
+    for rock in Rock.rocks:
+        rock.draw()
 
     pygame.display.flip()
