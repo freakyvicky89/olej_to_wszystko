@@ -78,7 +78,7 @@ if not os.path.exists('./saku.wav'):
 mixer.init()
 mixer.music.load('saku.wav')
 mixer.music.set_volume(.75)
-mixer.music.play()
+mixer.music.play(loops=-1)
 
 screen.fill(bg_color)
 pygame.display.flip()
