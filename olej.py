@@ -22,17 +22,21 @@ Y = 720
 screen = pygame.display.set_mode((X, Y))
 pygame.display.set_caption("Olej to wszystko [LOADING]")
 font = pygame.font.Font('freesansbold.ttf', 32)
+fg_color = COLOR['lavender']
+bg_color = COLOR['darkcyan']
 clock = pygame.time.Clock()
 max_tps = 20.0
 rot_speed = 5.0
 delta = 0.0
 CENTER = Vector2(X // 2, Y // 2)
 ROCK_V = Vector2(X // 4, 0)
+COCK_V = Vector2(0, -1)
+COCK_L = 50
 
 
 def display_text(text):
-    screen.fill((COLOR['darkcyan']))
-    loading_images = font.render(text, True, COLOR['lavender'])
+    screen.fill((bg_color))
+    loading_images = font.render(text, True, fg_color)
     loading_images_rect = loading_images.get_rect()
     loading_images_rect.center = CENTER
     screen.blit(loading_images, loading_images_rect)
@@ -73,7 +77,7 @@ mixer.music.load('saku.wav')
 mixer.music.set_volume(.75)
 mixer.music.play()
 
-screen.fill(COLOR['darkcyan'])
+screen.fill(bg_color)
 pygame.display.flip()
 pygame.event.get()
 
@@ -101,26 +105,47 @@ class GameObject(ABC):
             self.pos.y += Y
 
 
+def round_vector(v):
+    return int(v.x), int(v.y)
+
+
 class Cock(GameObject):
     cock = None
 
     def __init__(self):
         self.pos = Vector2(X / 2, Y / 2)
-        self.dir = Vector2(0, -1)
+        self.angle = 0
         self.vel = Vector2(0, 0)
         Cock.cock = self
 
     def up(self):
-        self.vel += self.dir
+        self.vel += COCK_V.rotate(self.angle)
 
     def down(self):
-        self.vel -= self.dir
+        self.vel -= COCK_V.rotate(self.angle)
 
     def left(self):
-        self.dir = self.dir.rotate(rot_speed)
+        self.angle -= rot_speed
+        if self.angle > 360:
+            self.angle -= 360
 
     def right(self):
-        self.dir = self.dir.rotate(-rot_speed)
+        self.angle += rot_speed
+        if self.angle < 0:
+            self.angle += 360
+
+    def draw(self):
+        cock_vector = COCK_V.rotate(self.angle)
+        ball_vector = cock_vector.rotate(90)
+        pygame.draw.circle(screen, fg_color, round_vector(self.pos + ball_vector * 10), 15)
+        pygame.draw.circle(screen, fg_color, round_vector(self.pos + ball_vector * -10), 15)
+        pygame.draw.polygon(screen, fg_color, (
+            round_vector(self.pos + ball_vector * 10),
+            round_vector(self.pos + ball_vector * -10),
+            round_vector(self.pos + cock_vector * COCK_L + ball_vector * -10),
+            round_vector(self.pos + cock_vector * COCK_L + ball_vector * 10)
+        ))
+        pygame.draw.circle(screen, fg_color, round_vector(self.pos + cock_vector * COCK_L), 10)
 
 
 class Rock(GameObject):
@@ -213,8 +238,8 @@ while True:
         rock_collisions()
 
     # DRAWING
-    screen.fill(COLOR['darkcyan'])
+    screen.fill(bg_color)
     for rock in Rock.rocks:
         rock.draw()
-
+    Cock.cock.draw()
     pygame.display.flip()
