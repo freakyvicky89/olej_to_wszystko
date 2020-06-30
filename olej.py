@@ -36,10 +36,10 @@ COCK_L = 50
 
 def display_text(text):
     screen.fill((bg_color))
-    loading_images = font.render(text, True, fg_color)
-    loading_images_rect = loading_images.get_rect()
-    loading_images_rect.center = CENTER
-    screen.blit(loading_images, loading_images_rect)
+    render = font.render(text, True, fg_color)
+    rect = render.get_rect()
+    rect.center = CENTER
+    screen.blit(render, rect)
     pygame.display.flip()
     pygame.event.get()
 
@@ -147,6 +147,13 @@ class Cock(GameObject):
         ))
         pygame.draw.circle(screen, fg_color, round_vector(self.pos + cock_vector * COCK_L), 10)
 
+    def collision_points(self):
+        cock_vector = COCK_V.rotate(self.angle)
+        ball_vector = cock_vector.rotate(90)
+        return [round_vector(self.pos + ball_vector * 25),
+        round_vector(self.pos + ball_vector * -25),
+        round_vector(self.pos + cock_vector * (COCK_L + 10))]
+
 
 class Rock(GameObject):
     rocks = []
@@ -188,20 +195,32 @@ class GameState(object):
 
     def __init__(self, level):
         self.level = level
+        self.lives = 3
         display_text("LEVEL %d" % level)
         sleep(3)
-        Rock.rocks.clear()
+        self.init_level(level)
+        GameState.game = self
 
+    def init_level(self, level):
+        Rock.rocks.clear()
         for i in range(level):
             vector = ROCK_V.rotate(i * (360 // level))
             Rock(CENTER + vector, vector.normalize(), 6)
-
         Cock()
-        GameState.game = self
+
+    def death(self):
+        self.lives -= 1
+        if self.lives > 0:
+            display_text("%d LIVES LEFT" % self.lives)
+            sleep(3)
+            self.init_level(self.level)
+        else:
+            display_text("GAME OVER :(")
+            sleep(3)
+            GameState(1)
 
 
-GameState(3)
-#GameState(1)
+GameState(1)
 #############
 # MAIN LOOP #
 #############
@@ -216,6 +235,7 @@ while True:
     # TICKING
     tick = clock.tick() / 1000.0
     delta += tick
+    cock_collision = False
     keys = pygame.key.get_pressed()
     while delta > 1 / max_tps:
         delta -= 1 / max_tps
@@ -236,6 +256,14 @@ while True:
             rock.move()
 
         rock_collisions()
+        for point in Cock.cock.collision_points():
+            for rock in Rock.rocks:
+                if rock.get_rect().collidepoint(point):
+                    cock_collision = True
+
+    if cock_collision:
+        GameState.game.death()
+        continue
 
     # DRAWING
     screen.fill(bg_color)
