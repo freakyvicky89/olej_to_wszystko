@@ -203,7 +203,9 @@ class Rock(GameObject):
             self.got_hit = 5
         else:
             if self.size > 1:
-                pass
+                new_vel = self.vel.rotate(90).normalize()
+                Rock(self.pos + new_vel, self.vel + (new_vel * self.size), self.size - 1)
+                Rock(self.pos - new_vel, self.vel - (new_vel * self.size), self.size - 1)
             Rock.rocks.remove(self)
 
     def draw(self):
@@ -256,7 +258,7 @@ class GameState(object):
         Piss.bullets.clear()
         for i in range(level):
             vector = ROCK_V.rotate(i * (360 // level))
-            Rock(CENTER + vector, vector.normalize(), 6)
+            Rock(CENTER + vector, vector.normalize(), 5)
         Cock()
 
     def death(self):
@@ -269,6 +271,9 @@ class GameState(object):
             display_text("GAME OVER :(")
             sleep(3)
             GameState(1)
+
+    def next_level(self):
+        GameState(self.level + 1)
 
 
 GameState(1)
@@ -318,6 +323,9 @@ while True:
     if cock_collision:
         GameState.game.death()
         continue
+
+    if len(Rock.rocks) == 0:
+        GameState.game.next_level()
 
     # DRAWING
     screen.fill(bg_color)
