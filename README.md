@@ -10,7 +10,7 @@ odstresowujący lecz trudny jak główny bohater klon asteroids
 ## instalacja
 ### windows
 * uruchom olej.exe w katalogu olej_windows
-* PS magiczny przycisk "Download ZIP" kryje się pod zielonym przyciskiem "Clone" na tej stronie (brawo github za ostatni update layoutu O_o)
+* PS magiczny przycisk "Download ZIP" kryje się pod zielonym przyciskiem "Code" na tej stronie (brawo github za ostatni update layoutu O_o)
 ### ubuntu
 * sudo apt install python3 python3-pip
 * pip3 install -r requirements.txt
