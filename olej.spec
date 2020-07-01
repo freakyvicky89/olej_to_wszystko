@@ -3,8 +3,8 @@
 block_cipher = None
 
 
-a = Analysis(['/Users/wiki/python/olej_to_wszystko/olej.py'],
-             pathex=['/Users/wiki/python/olej_to_wszystko'],
+a = Analysis(['/src/olej.py'],
+             pathex=['/src'],
              binaries=[],
              datas=[],
              hiddenimports=[],
