@@ -9,7 +9,7 @@ odstresowujący lecz trudny jak główny bohater klon asteroids
 
 ## instalacja
 ### windows
-todo
+* uruchom olej.exe w katalogu olej_windows
 ### ubuntu
 * sudo apt install python3 python3-pip
 * pip3 install -r requirements.txt
